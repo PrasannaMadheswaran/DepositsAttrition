@@ -1,0 +1,12 @@
+# DuckDB file — local only, not committed to GitHub
+data/deposits.db
+
+# Streamlit secrets — NEVER commit tokens to GitHub
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/

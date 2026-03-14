@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "▶️ Run Streamlit App",
+            "type": "python",
+            "request": "launch",
+            "module": "streamlit",
+            "args": ["run", "app.py"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "▶️ Run Data Generator",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/data_generator.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "▶️ Run MotherDuck Push",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/motherduck_push.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}
