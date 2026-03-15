@@ -9,15 +9,25 @@ import pandas as pd
 import psycopg2
 import streamlit as st
 
-secrets = toml.load(os.path.join(os.path.dirname(__file__), ".streamlit", "secrets.toml"))
-DB_URL  = secrets["supabase"]["url"]
+# ── Load secrets (local) or env var (Streamlit Cloud) ────────
+try:
+    secrets = toml.load(os.path.join(os.path.dirname(__file__), ".streamlit", "secrets.toml"))
+    DB_URL  = secrets["supabase"]["url"]
+except Exception:
+    DB_URL  = st.secrets["supabase"]["url"]
 
 
 @st.cache_resource
 def get_connection():
-    return psycopg2.connect(DB_URL)
+    return psycopg2.connect(DB_URL, sslmode="require", connect_timeout=10)
 
 
 def query(sql: str) -> pd.DataFrame:
-    con = get_connection()
-    return pd.read_sql(sql, con)
+    try:
+        con = get_connection()
+        return pd.read_sql(sql, con)
+    except Exception:
+        # Reconnect if connection dropped
+        get_connection.clear()
+        con = get_connection()
+        return pd.read_sql(sql, con)
