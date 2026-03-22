@@ -1,33 +1,19 @@
-# ============================================================
-#  Deposits Attrition Data App  —  Database Helper
-#  Connects to Supabase PostgreSQL
-# ============================================================
-
 import os
-import toml
 import pandas as pd
-import psycopg2
+import duckdb
 import streamlit as st
 
-# ── Load secrets (local) or env var (Streamlit Cloud) ────────
-try:
-    secrets = toml.load(os.path.join(os.path.dirname(__file__), ".streamlit", "secrets.toml"))
-    DB_URL  = secrets["supabase"]["url"]
-except Exception:
-    DB_URL  = st.secrets["supabase"]["url"]
-
+DB_PATH  = os.path.join(os.path.dirname(__file__), "data", "deposits.db")
+CSV_PATH = os.path.join(os.path.dirname(__file__), "data", "customers.csv")
 
 @st.cache_resource
 def get_connection():
-    return psycopg2.connect(DB_URL, sslmode="require", connect_timeout=10)
-
+    if os.path.exists(DB_PATH):
+        return duckdb.connect(DB_PATH, read_only=True)
+    con = duckdb.connect(":memory:")
+    df  = pd.read_csv(CSV_PATH)
+    con.execute("CREATE TABLE customers AS SELECT * FROM df")
+    return con
 
 def query(sql: str) -> pd.DataFrame:
-    try:
-        con = get_connection()
-        return pd.read_sql(sql, con)
-    except Exception:
-        # Reconnect if connection dropped
-        get_connection.clear()
-        con = get_connection()
-        return pd.read_sql(sql, con)
+    return get_connection().execute(sql).df()

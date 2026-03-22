@@ -3,5 +3,4 @@ pandas
 numpy
 scikit-learn
 plotly
-psycopg2-binary
-toml
+duckdb==1.2.2
