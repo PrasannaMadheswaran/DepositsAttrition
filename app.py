@@ -17,7 +17,7 @@ st.markdown("""
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🔍 EDA", "🤖 ML Model", "⚠️ Risk Scoring"])
 
 with tab1:
-    from pages import overview
+    from pages import _overview as overview
     overview.show()
 
 with tab2:
