@@ -11,6 +11,19 @@ PALETTE = px.colors.qualitative.Bold
 
 _CSS = """
 <style>
+    /* light blue background */
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    .main {
+        background-color: #EEF4FB !important;
+    }
+    /* keep metric cards slightly white so they stand out */
+    [data-testid="stMetric"] {
+        background-color: #FFFFFF;
+        border-radius: 8px;
+        padding: 0.4rem 0.6rem !important;
+    }
+    /* pointer cursor on drillable bar chart elements */
     .js-plotly-plot .plotly g.trace.bars g.point,
     .js-plotly-plot .plotly g.trace.bars g.point path,
     .js-plotly-plot .plotly g.trace.bars g.point rect,
@@ -221,8 +234,6 @@ def show():
             st.session_state[key] = None
 
     st.markdown(_CSS, unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align:center; margin:0; padding:0;'>📊 Overview Dashboard</h4>",
-                unsafe_allow_html=True)
     st.markdown("<div style='margin-bottom:8px'></div>", unsafe_allow_html=True)
 
     kpis, by_segment, by_account, by_tenure, by_type, by_segment_dep = load_summary()
