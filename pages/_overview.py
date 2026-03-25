@@ -19,6 +19,28 @@ _CSS = """
     .js-plotly-plot .plotly .bars .point rect {
         cursor: pointer !important;
     }
+    /* KPI title hyperlink buttons ─────────────────────────────────
+       targets only the button immediately following a .kpi-marker span */
+    div:has(.kpi-marker) + div[data-testid="stButton"] > button {
+        background:      transparent !important;
+        border:          none        !important;
+        box-shadow:      none        !important;
+        color:           #1565C0    !important;
+        font-size:       13px       !important;
+        font-weight:     600        !important;
+        text-decoration: underline  !important;
+        cursor:          pointer    !important;
+        padding:         0          !important;
+        margin:          0 0 2px 0  !important;
+        min-height:      unset      !important;
+        height:          auto       !important;
+        line-height:     1.5        !important;
+        width:           auto       !important;
+    }
+    div:has(.kpi-marker) + div[data-testid="stButton"] > button:hover {
+        color: #0D47A1 !important;
+        background: transparent !important;
+    }
 </style>
 """
 
@@ -232,47 +254,43 @@ def show():
     # ── KPI Cards (always visible) ─────────────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        m1, b1 = st.columns([3, 2])
-        with m1:
-            st.metric("👥 Total Customers", f"{int(k['total_customers']):,}",
-                      help="Total customers — active + churned.")
-        with b1:
-            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
-            if st.button("🔍 By Branch", key="b1", use_container_width=True):
-                _clear_all()
-                st.session_state.drill_kpi = "total_customers"
+        st.markdown('<span class="kpi-marker"></span>', unsafe_allow_html=True)
+        if st.button("👥 Total Customers", key="b1",
+                     help="Click to drill down by branch"):
+            _clear_all()
+            st.session_state.drill_kpi = "total_customers"
+        st.metric("Total Customers", f"{int(k['total_customers']):,}",
+                  help="Total customers — active + churned.",
+                  label_visibility="collapsed")
     with c2:
-        m2, b2 = st.columns([3, 2])
-        with m2:
-            st.metric("⚠️ Attrition Rate", f"{k['attrition_rate']}%",
-                      delta=f"{int(k['total_churned']):,} churned", delta_color="inverse",
-                      help=f"= ({int(k['total_churned']):,} ÷ {int(k['total_customers']):,}) × 100")
-        with b2:
-            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
-            if st.button("🔍 By Branch", key="b2", use_container_width=True):
-                _clear_all()
-                st.session_state.drill_kpi = "attrition_rate"
+        st.markdown('<span class="kpi-marker"></span>', unsafe_allow_html=True)
+        if st.button("⚠️ Attrition Rate", key="b2",
+                     help="Click to drill down by branch"):
+            _clear_all()
+            st.session_state.drill_kpi = "attrition_rate"
+        st.metric("Attrition Rate", f"{k['attrition_rate']}%",
+                  delta=f"{int(k['total_churned']):,} churned", delta_color="inverse",
+                  help=f"= ({int(k['total_churned']):,} ÷ {int(k['total_customers']):,}) × 100",
+                  label_visibility="collapsed")
     with c3:
-        m3, b3 = st.columns([3, 2])
-        with m3:
-            st.metric("💰 Deposits at Risk", f"OMR {int(k['deposits_at_risk']):,}",
-                      delta="Churned customer balances", delta_color="inverse",
-                      help="SUM(balance) WHERE attrition_flag = 1")
-        with b3:
-            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
-            if st.button("🔍 By Branch", key="b3", use_container_width=True):
-                _clear_all()
-                st.session_state.drill_kpi = "deposits_at_risk"
+        st.markdown('<span class="kpi-marker"></span>', unsafe_allow_html=True)
+        if st.button("💰 Deposits at Risk", key="b3",
+                     help="Click to drill down by branch"):
+            _clear_all()
+            st.session_state.drill_kpi = "deposits_at_risk"
+        st.metric("Deposits at Risk", f"OMR {int(k['deposits_at_risk']):,}",
+                  delta="Churned customer balances", delta_color="inverse",
+                  help="SUM(balance) WHERE attrition_flag = 1",
+                  label_visibility="collapsed")
     with c4:
-        m4, b4 = st.columns([3, 2])
-        with m4:
-            st.metric("🏦 Avg Balance", f"OMR {int(k['avg_balance']):,}",
-                      help="AVG(balance) across all customers.")
-        with b4:
-            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
-            if st.button("🔍 By Branch", key="b4", use_container_width=True):
-                _clear_all()
-                st.session_state.drill_kpi = "avg_balance"
+        st.markdown('<span class="kpi-marker"></span>', unsafe_allow_html=True)
+        if st.button("🏦 Avg Balance", key="b4",
+                     help="Click to drill down by branch"):
+            _clear_all()
+            st.session_state.drill_kpi = "avg_balance"
+        st.metric("Avg Balance", f"OMR {int(k['avg_balance']):,}",
+                  help="AVG(balance) across all customers.",
+                  label_visibility="collapsed")
 
     st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
 
