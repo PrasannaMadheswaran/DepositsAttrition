@@ -387,40 +387,40 @@ def show():
             st.session_state.drill_val   = ev2.selection.points[0]["x"]
 
     with col3:
-        st.caption("**Exit Type Breakdown** · 💡 click a bar to drill down")
-        by_type_sorted = by_type.sort_values("count", ascending=True)
-        fig3 = px.bar(by_type_sorted, x="count", y="attrition_type",
-                      orientation="h", color="attrition_type", text="count",
-                      color_discrete_sequence=px.colors.qualitative.Set2, height=H)
-        fig3.update_traces(textposition="outside")
-        fig3.update_layout(showlegend=False, margin=M,
-                           xaxis_title="", yaxis_title="",
+        st.caption("**Attrition by Tenure** · 💡 click a bar to drill down")
+        fig3 = px.bar(by_tenure, x="tenure_bucket", y="attrition_rate",
+                      color="attrition_rate", text="attrition_rate",
+                      color_continuous_scale="Reds", height=H)
+        fig3.update_traces(texttemplate="%{text}%", textposition="outside")
+        fig3.update_layout(coloraxis_showscale=False, yaxis_range=[0,100],
+                           margin=M, xaxis_title="", yaxis_title="",
                            dragmode=False, clickmode="event+select")
         ev3 = st.plotly_chart(fig3, use_container_width=True, on_select="rerun",
-                              key="exit_chart", selection_mode="points")
+                              key="ten_chart", selection_mode="points")
         if ev3 and ev3.selection and ev3.selection.points:
             _clear_all()
-            st.session_state.drill_chart = "exit_type"
-            st.session_state.drill_val   = ev3.selection.points[0]["y"]
+            st.session_state.drill_chart = "tenure"
+            st.session_state.drill_val   = ev3.selection.points[0]["x"]
 
     st.markdown("<div style='margin-top:6px'></div>", unsafe_allow_html=True)
     col4, col5, col6 = st.columns(3)
 
     with col4:
-        st.caption("**Attrition by Tenure** · 💡 click a bar to drill down")
-        fig4 = px.bar(by_tenure, x="tenure_bucket", y="attrition_rate",
-                      color="attrition_rate", text="attrition_rate",
-                      color_continuous_scale="Reds", height=H)
-        fig4.update_traces(texttemplate="%{text}%", textposition="outside")
-        fig4.update_layout(coloraxis_showscale=False, yaxis_range=[0,100],
-                           margin=M, xaxis_title="", yaxis_title="",
+        st.caption("**Exit Type Breakdown** · 💡 click a bar to drill down")
+        by_type_sorted = by_type.sort_values("count", ascending=True)
+        fig4 = px.bar(by_type_sorted, x="count", y="attrition_type",
+                      orientation="h", color="attrition_type", text="count",
+                      color_discrete_sequence=px.colors.qualitative.Set2, height=H)
+        fig4.update_traces(textposition="outside")
+        fig4.update_layout(showlegend=False, margin=M,
+                           xaxis_title="", yaxis_title="",
                            dragmode=False, clickmode="event+select")
         ev4 = st.plotly_chart(fig4, use_container_width=True, on_select="rerun",
-                              key="ten_chart", selection_mode="points")
+                              key="exit_chart", selection_mode="points")
         if ev4 and ev4.selection and ev4.selection.points:
             _clear_all()
-            st.session_state.drill_chart = "tenure"
-            st.session_state.drill_val   = ev4.selection.points[0]["x"]
+            st.session_state.drill_chart = "exit_type"
+            st.session_state.drill_val   = ev4.selection.points[0]["y"]
 
     with col5:
         st.caption("**Total Deposits by Segment (OMR M)** · 💡 click a bar to drill down")
