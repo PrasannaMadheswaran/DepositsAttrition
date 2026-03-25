@@ -232,31 +232,47 @@ def show():
     # ── KPI Cards (always visible) ─────────────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.metric("👥 Total Customers", f"{int(k['total_customers']):,}",
-                  help="Total customers — active + churned.")
-        if st.button("🔍 By Branch", key="b1"):
-            _clear_all()
-            st.session_state.drill_kpi = "total_customers"
+        m1, b1 = st.columns([3, 2])
+        with m1:
+            st.metric("👥 Total Customers", f"{int(k['total_customers']):,}",
+                      help="Total customers — active + churned.")
+        with b1:
+            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
+            if st.button("🔍 By Branch", key="b1", use_container_width=True):
+                _clear_all()
+                st.session_state.drill_kpi = "total_customers"
     with c2:
-        st.metric("⚠️ Attrition Rate", f"{k['attrition_rate']}%",
-                  delta=f"{int(k['total_churned']):,} churned", delta_color="inverse",
-                  help=f"= ({int(k['total_churned']):,} ÷ {int(k['total_customers']):,}) × 100")
-        if st.button("🔍 By Branch", key="b2"):
-            _clear_all()
-            st.session_state.drill_kpi = "attrition_rate"
+        m2, b2 = st.columns([3, 2])
+        with m2:
+            st.metric("⚠️ Attrition Rate", f"{k['attrition_rate']}%",
+                      delta=f"{int(k['total_churned']):,} churned", delta_color="inverse",
+                      help=f"= ({int(k['total_churned']):,} ÷ {int(k['total_customers']):,}) × 100")
+        with b2:
+            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
+            if st.button("🔍 By Branch", key="b2", use_container_width=True):
+                _clear_all()
+                st.session_state.drill_kpi = "attrition_rate"
     with c3:
-        st.metric("💰 Deposits at Risk", f"OMR {int(k['deposits_at_risk']):,}",
-                  delta="Churned customer balances", delta_color="inverse",
-                  help="SUM(balance) WHERE attrition_flag = 1")
-        if st.button("🔍 By Branch", key="b3"):
-            _clear_all()
-            st.session_state.drill_kpi = "deposits_at_risk"
+        m3, b3 = st.columns([3, 2])
+        with m3:
+            st.metric("💰 Deposits at Risk", f"OMR {int(k['deposits_at_risk']):,}",
+                      delta="Churned customer balances", delta_color="inverse",
+                      help="SUM(balance) WHERE attrition_flag = 1")
+        with b3:
+            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
+            if st.button("🔍 By Branch", key="b3", use_container_width=True):
+                _clear_all()
+                st.session_state.drill_kpi = "deposits_at_risk"
     with c4:
-        st.metric("🏦 Avg Balance", f"OMR {int(k['avg_balance']):,}",
-                  help="AVG(balance) across all customers.")
-        if st.button("🔍 By Branch", key="b4"):
-            _clear_all()
-            st.session_state.drill_kpi = "avg_balance"
+        m4, b4 = st.columns([3, 2])
+        with m4:
+            st.metric("🏦 Avg Balance", f"OMR {int(k['avg_balance']):,}",
+                      help="AVG(balance) across all customers.")
+        with b4:
+            st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
+            if st.button("🔍 By Branch", key="b4", use_container_width=True):
+                _clear_all()
+                st.session_state.drill_kpi = "avg_balance"
 
     st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
 
