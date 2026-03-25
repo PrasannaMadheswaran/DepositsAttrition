@@ -11,18 +11,6 @@ PALETTE = px.colors.qualitative.Bold
 
 _CSS = """
 <style>
-    /* light blue background */
-    [data-testid="stAppViewContainer"],
-    [data-testid="stMain"],
-    .main {
-        background-color: #EEF4FB !important;
-    }
-    /* keep metric cards slightly white so they stand out */
-    [data-testid="stMetric"] {
-        background-color: #FFFFFF;
-        border-radius: 8px;
-        padding: 0.4rem 0.6rem !important;
-    }
     /* pointer cursor on drillable bar chart elements */
     .js-plotly-plot .plotly g.trace.bars g.point,
     .js-plotly-plot .plotly g.trace.bars g.point path,

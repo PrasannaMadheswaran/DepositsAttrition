@@ -5,12 +5,23 @@ st.set_page_config(page_title="Deposits Attrition", page_icon="🏦",
 
 st.markdown("""
     <style>
+        /* layout */
         [data-testid="collapsedControl"] { display: none; }
         .block-container { padding-top: 0.3rem; padding-bottom: 0rem; }
         header { visibility: hidden; }
         div[data-testid="stTabs"] { margin-top: 0rem; }
         div[data-testid="stMetric"] { padding: 0.2rem 0; }
         div[data-testid="stVerticalBlock"] { gap: 0rem; }
+        /* light blue background — applies to all tabs */
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"],
+        .main { background-color: #EEF4FB !important; }
+        /* metric cards stand out on the blue background */
+        [data-testid="stMetric"] {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            padding: 0.4rem 0.6rem !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -21,7 +32,8 @@ with tab1:
     overview.show()
 
 with tab2:
-    st.info("🔜 EDA coming soon!")
+    from pages import _eda as eda
+    eda.show()
 
 with tab3:
     st.info("🔜 ML Model coming soon!")
