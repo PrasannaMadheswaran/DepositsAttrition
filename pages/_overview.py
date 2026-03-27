@@ -53,7 +53,8 @@ def load_summary():
                ROUND(AVG(attrition_flag) * 100, 2)                AS attrition_rate,
                ROUND(SUM(CASE WHEN attrition_flag=1 THEN balance ELSE 0 END), 0)
                                                                    AS deposits_at_risk,
-               ROUND(AVG(balance), 0)                             AS avg_balance,
+               ROUND(AVG(CASE WHEN attrition_flag=1 THEN balance END), 0)
+                                                                   AS avg_churned_balance,
                SUM(attrition_flag)                                 AS total_churned
         FROM customers
     """)
@@ -80,11 +81,19 @@ def load_summary():
         SELECT attrition_type, COUNT(*) AS count
         FROM customers WHERE attrition_flag=1 GROUP BY attrition_type
     """)
-    by_segment_dep = query("""
-        SELECT segment, ROUND(SUM(balance)/1e6, 2) AS total_deposits_m
-        FROM customers GROUP BY segment
+    by_seg_risk = query("""
+        SELECT segment,
+               ROUND(SUM(balance)/1e6, 3) AS deposits_at_risk_m
+        FROM customers WHERE attrition_flag = 1
+        GROUP BY segment ORDER BY deposits_at_risk_m DESC
     """)
-    return kpis, by_segment, by_account, by_tenure, by_type, by_segment_dep
+    by_acc_risk = query("""
+        SELECT account_type,
+               ROUND(SUM(balance)/1e6, 3) AS deposits_at_risk_m
+        FROM customers WHERE attrition_flag = 1
+        GROUP BY account_type ORDER BY deposits_at_risk_m DESC
+    """)
+    return kpis, by_segment, by_account, by_tenure, by_type, by_seg_risk, by_acc_risk
 
 
 @st.cache_data
@@ -96,8 +105,8 @@ def load_kpi_drill(metric: str):
                              "Attrition Rate by Branch (%)", "value", "Rate %"),
         "deposits_at_risk": ("SELECT branch, ROUND(SUM(CASE WHEN attrition_flag=1 THEN balance ELSE 0 END),0) AS value FROM customers GROUP BY branch ORDER BY value DESC",
                              "Deposits at Risk by Branch (OMR)", "value", "OMR"),
-        "avg_balance"     : ("SELECT branch, ROUND(AVG(balance),0) AS value FROM customers GROUP BY branch ORDER BY value DESC",
-                             "Avg Balance by Branch (OMR)", "value", "OMR"),
+        "avg_churned_balance": ("SELECT branch, ROUND(AVG(CASE WHEN attrition_flag=1 THEN balance END),0) AS value FROM customers GROUP BY branch ORDER BY value DESC",
+                               "Avg Balance of Churned Customers by Branch (OMR)", "value", "OMR"),
     }
     sql, title, val_col, label = queries[metric]
     return query(sql), title, val_col, label
@@ -152,13 +161,21 @@ def load_chart_drill(chart: str, selected: str):
         """)
         return df, f"Customers by Branch — {selected} Segment", "customers", "Customers"
 
-    elif chart == "deposits_segment":
+    elif chart == "deposits_seg_risk":
         df = query(f"""
-            SELECT branch, ROUND(SUM(balance)/1e6, 2) AS total_deposits_m
-            FROM customers WHERE segment='{selected}'
-            GROUP BY branch ORDER BY total_deposits_m DESC
+            SELECT branch, ROUND(SUM(balance)/1e6, 3) AS deposits_at_risk_m
+            FROM customers WHERE attrition_flag=1 AND segment='{selected}'
+            GROUP BY branch ORDER BY deposits_at_risk_m DESC
         """)
-        return df, f"Total Deposits by Branch — {selected} Segment (OMR M)", "total_deposits_m", "OMR M"
+        return df, f"Deposits at Risk by Branch — {selected} Segment (OMR M)", "deposits_at_risk_m", "OMR M"
+
+    elif chart == "deposits_acc_risk":
+        df = query(f"""
+            SELECT branch, ROUND(SUM(balance)/1e6, 3) AS deposits_at_risk_m
+            FROM customers WHERE attrition_flag=1 AND account_type='{selected}'
+            GROUP BY branch ORDER BY deposits_at_risk_m DESC
+        """)
+        return df, f"Deposits at Risk by Branch — {selected} Accounts (OMR M)", "deposits_at_risk_m", "OMR M"
 
 
 @st.cache_data
@@ -166,10 +183,14 @@ def load_customer_drill(chart, val, kpi, branch):
     """Return up to 200 customers filtered by branch + the active drill context."""
     conditions = [f"branch = '{branch}'"]
 
-    if chart == "segment" or chart == "customers_segment":
+    if chart in ("segment", "customers_segment", "deposits_seg_risk"):
         conditions.append(f"segment = '{val}'")
-    elif chart == "account_type":
+        if chart == "deposits_seg_risk":
+            conditions.append("attrition_flag = 1")
+    elif chart in ("account_type", "deposits_acc_risk"):
         conditions.append(f"account_type = '{val}'")
+        if chart == "deposits_acc_risk":
+            conditions.append("attrition_flag = 1")
     elif chart == "exit_type":
         conditions.append(f"attrition_type = '{val}'")
     elif chart == "tenure":
@@ -246,7 +267,7 @@ def show():
     st.markdown(_CSS, unsafe_allow_html=True)
     st.markdown("<div style='margin-bottom:8px'></div>", unsafe_allow_html=True)
 
-    kpis, by_segment, by_account, by_tenure, by_type, by_segment_dep = load_summary()
+    kpis, by_segment, by_account, by_tenure, by_type, by_seg_risk, by_acc_risk = load_summary()
     k  = kpis.iloc[0]
     H  = 210
     M  = dict(t=5, b=5, l=30, r=10)
@@ -284,12 +305,12 @@ def show():
                   label_visibility="collapsed")
     with c4:
         st.markdown('<span class="kpi-marker"></span>', unsafe_allow_html=True)
-        if st.button("🏦 Avg Balance", key="b4",
+        if st.button("📉 Avg Balance (Churned)", key="b4",
                      help="Click to drill down by branch"):
             _clear_all()
-            st.session_state.drill_kpi = "avg_balance"
-        st.metric("Avg Balance", f"OMR {int(k['avg_balance']):,}",
-                  help="AVG(balance) across all customers.",
+            st.session_state.drill_kpi = "avg_churned_balance"
+        st.metric("Avg Balance (Churned)", f"OMR {int(k['avg_churned_balance']):,}",
+                  help="AVG(balance) of churned customers only — shows the typical deposit size being lost.",
                   label_visibility="collapsed")
 
     st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
@@ -423,32 +444,31 @@ def show():
             st.session_state.drill_val   = ev4.selection.points[0]["y"]
 
     with col5:
-        st.caption("**Total Deposits by Segment (OMR M)** · 💡 click a bar to drill down")
-        fig5 = px.bar(by_segment_dep, x="segment", y="total_deposits_m",
-                      color="segment", text="total_deposits_m",
-                      color_discrete_sequence=PALETTE, height=H)
+        st.caption("**Deposits at Risk by Segment (OMR M)** · churned customers only · 💡 click to drill down")
+        fig5 = px.bar(by_seg_risk, x="segment", y="deposits_at_risk_m",
+                      color="segment", text="deposits_at_risk_m",
+                      color_discrete_sequence=px.colors.qualitative.Set2, height=H)
         fig5.update_traces(texttemplate="OMR %{text}M", textposition="outside")
-        fig5.update_layout(showlegend=False, margin=M, xaxis_title="", yaxis_title="",
+        fig5.update_layout(showlegend=False, margin=M, xaxis_title="", yaxis_title="OMR M",
                            dragmode=False, clickmode="event+select")
         ev5 = st.plotly_chart(fig5, use_container_width=True, on_select="rerun",
-                              key="dep_seg_chart", selection_mode="points")
+                              key="dep_seg_risk_chart", selection_mode="points")
         if ev5 and ev5.selection and ev5.selection.points:
             _clear_all()
-            st.session_state.drill_chart = "deposits_segment"
+            st.session_state.drill_chart = "deposits_seg_risk"
             st.session_state.drill_val   = ev5.selection.points[0]["x"]
 
     with col6:
-        st.caption("**Customers by Segment** · 💡 click a bar to drill down")
-        fig6 = px.bar(by_segment, x="segment", y="customers", color="segment",
-                      text="customers",
-                      color_discrete_sequence=PALETTE, height=H)
-        fig6.update_traces(texttemplate="%{text:,}", textposition="outside")
-        fig6.update_layout(showlegend=False, margin=M,
-                           xaxis_title="", yaxis_title="",
+        st.caption("**Deposits at Risk by Account Type (OMR M)** · churned customers only · 💡 click to drill down")
+        fig6 = px.bar(by_acc_risk, x="account_type", y="deposits_at_risk_m",
+                      color="account_type", text="deposits_at_risk_m",
+                      color_discrete_sequence=px.colors.qualitative.Pastel, height=H)
+        fig6.update_traces(texttemplate="OMR %{text}M", textposition="outside")
+        fig6.update_layout(showlegend=False, margin=M, xaxis_title="", yaxis_title="OMR M",
                            dragmode=False, clickmode="event+select")
         ev6 = st.plotly_chart(fig6, use_container_width=True, on_select="rerun",
-                              key="cus_seg_chart", selection_mode="points")
+                              key="dep_acc_risk_chart", selection_mode="points")
         if ev6 and ev6.selection and ev6.selection.points:
             _clear_all()
-            st.session_state.drill_chart = "customers_segment"
+            st.session_state.drill_chart = "deposits_acc_risk"
             st.session_state.drill_val   = ev6.selection.points[0]["x"]
