@@ -107,10 +107,7 @@ def load_summary():
     """)
 
     top10 = query("""
-        SELECT customer_id, branch, segment, account_type, customer_status,
-               ROUND(balance, 0) AS balance,
-               ROUND(loan_outstanding, 0) AS loan_outstanding,
-               risk_signal_count AS signals
+        SELECT customer_id, segment, ROUND(balance, 0) AS balance
         FROM customers
         WHERE customer_status IN ('Active','Inactive')
           AND risk_level = 'High'
@@ -447,21 +444,15 @@ def show():
     with col6:
         st.caption("**🔴 Top 10 High-Risk Customers by Balance**")
         st.dataframe(
-            top10.rename(columns={
-                "customer_id"     : "Customer ID",
-                "branch"          : "Branch",
-                "segment"         : "Segment",
-                "account_type"    : "Account",
-                "customer_status" : "Status",
-                "balance"         : "Balance (OMR)",
-                "loan_outstanding": "Loan (OMR)",
-                "signals"         : "Signals",
+            top10[["customer_id", "segment", "balance"]].rename(columns={
+                "customer_id": "Customer ID",
+                "segment"    : "Segment",
+                "balance"    : "Balance (OMR)",
             }),
             use_container_width=True,
             height=H + 30,
             hide_index=True,
             column_config={
                 "Balance (OMR)": st.column_config.NumberColumn(format="%d"),
-                "Loan (OMR)"   : st.column_config.NumberColumn(format="%d"),
             }
         )
