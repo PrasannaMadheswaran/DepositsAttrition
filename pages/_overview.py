@@ -106,14 +106,19 @@ def load_summary():
         FROM customers WHERE customer_status IN ('Active','Inactive')
     """)
 
-    by_status = query("""
-        SELECT customer_status, COUNT(*) AS customers,
-               ROUND(SUM(balance)/1e6,2) AS balance_m
-        FROM customers WHERE customer_status IN ('Active','Inactive')
-        GROUP BY customer_status
+    top10 = query("""
+        SELECT customer_id, branch, segment, account_type, customer_status,
+               ROUND(balance, 0) AS balance,
+               ROUND(loan_outstanding, 0) AS loan_outstanding,
+               risk_signal_count AS signals
+        FROM customers
+        WHERE customer_status IN ('Active','Inactive')
+          AND risk_level = 'High'
+        ORDER BY balance DESC
+        LIMIT 10
     """)
 
-    return kpis, by_risk, by_segment, by_account, by_branch, by_signal, by_status
+    return kpis, by_risk, by_segment, by_account, by_branch, by_signal, top10
 
 
 @st.cache_data
@@ -257,7 +262,7 @@ def show():
     st.markdown(_CSS, unsafe_allow_html=True)
     st.markdown("<div style='margin-bottom:8px'></div>", unsafe_allow_html=True)
 
-    kpis, by_risk, by_segment, by_account, by_branch, by_signal, by_status = load_summary()
+    kpis, by_risk, by_segment, by_account, by_branch, by_signal, top10 = load_summary()
     k = kpis.iloc[0]
     H = 210
     M = dict(t=5, b=5, l=30, r=10)
@@ -438,13 +443,25 @@ def show():
                            dragmode=False)
         st.plotly_chart(fig5, use_container_width=True)
 
-    # Chart 6 — Active vs Inactive balance
+    # Chart 6 — Top 10 High-Risk by Balance
     with col6:
-        st.caption("**Portfolio Split — Active vs Inactive**")
-        fig6 = px.bar(by_status, x="customer_status", y=["customers", "balance_m"],
-                      barmode="group",
-                      color_discrete_sequence=["#3498DB", "#E74C3C"], height=H)
-        fig6.update_layout(margin=M, xaxis_title="", yaxis_title="",
-                           legend=dict(orientation="h", y=1.1, x=0),
-                           dragmode=False)
-        st.plotly_chart(fig6, use_container_width=True)
+        st.caption("**🔴 Top 10 High-Risk Customers by Balance**")
+        st.dataframe(
+            top10.rename(columns={
+                "customer_id"     : "Customer ID",
+                "branch"          : "Branch",
+                "segment"         : "Segment",
+                "account_type"    : "Account",
+                "customer_status" : "Status",
+                "balance"         : "Balance (OMR)",
+                "loan_outstanding": "Loan (OMR)",
+                "signals"         : "Signals",
+            }),
+            use_container_width=True,
+            height=H + 30,
+            hide_index=True,
+            column_config={
+                "Balance (OMR)": st.column_config.NumberColumn(format="%d"),
+                "Loan (OMR)"   : st.column_config.NumberColumn(format="%d"),
+            }
+        )
