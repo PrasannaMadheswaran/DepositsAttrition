@@ -25,7 +25,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🔍 EDA", "🤖 ML Model", "⚠️ Risk Scoring"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Overview", "🔍 EDA", "🤖 ML Model", "⚠️ Risk Scoring", "📖 Guide"])
 
 with tab1:
     from pages import _overview as overview
@@ -40,3 +40,7 @@ with tab3:
 
 with tab4:
     st.info("🔜 Risk Scoring coming soon!")
+
+with tab5:
+    from pages import _docs as docs
+    docs.show()
