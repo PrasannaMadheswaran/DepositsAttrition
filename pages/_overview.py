@@ -46,6 +46,7 @@ def load_summary():
                                                                        AS at_risk_count,
             ROUND(SUM(CASE WHEN risk_level IN ('High','Medium') THEN balance ELSE 0 END), 0)
                                                                        AS deposits_exposed,
+            ROUND(SUM(balance), 0)                                     AS total_balance,
             ROUND(AVG(CASE WHEN risk_level = 'High' THEN balance END), 0)
                                                                        AS avg_high_risk_bal
         FROM customers
@@ -282,7 +283,10 @@ def show():
         st.markdown('<span class="kpi-marker"></span>', unsafe_allow_html=True)
         if st.button("💰 Deposits Exposed", key="b3", help="Click to drill down by branch"):
             _clear_all(); st.session_state.drill_kpi = "deposits_exposed"
+        exposed_pct = round(k['deposits_exposed'] / k['total_balance'] * 100, 1) if k['total_balance'] else 0
         st.metric("Deposits Exposed", f"OMR {int(k['deposits_exposed']):,}",
+                  delta=f"{exposed_pct}% of total portfolio",
+                  delta_color="inverse",
                   help="Total balance held by High + Medium risk customers.",
                   label_visibility="collapsed")
     with c4:
