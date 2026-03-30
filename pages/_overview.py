@@ -48,7 +48,8 @@ def load_summary():
                                                                        AS deposits_exposed,
             ROUND(SUM(balance), 0)                                     AS total_balance,
             ROUND(SUM(CASE WHEN risk_level IN ('High','Medium') THEN loan_outstanding ELSE 0 END), 0)
-                                                                       AS loan_exposed
+                                                                       AS loan_exposed,
+            ROUND(SUM(loan_outstanding), 0)                            AS total_loan
         FROM customers
         WHERE customer_status IN ('Active','Inactive')
     """)
@@ -293,7 +294,10 @@ def show():
         st.markdown('<span class="kpi-marker"></span>', unsafe_allow_html=True)
         if st.button("🏦 Loan Outstanding (At-Risk)", key="b4", help="Click to drill down by branch"):
             _clear_all(); st.session_state.drill_kpi = "loan_exposed"
+        loan_pct = round(k['loan_exposed'] / k['total_loan'] * 100, 1) if k['total_loan'] else 0
         st.metric("Loan Outstanding (At-Risk)", f"OMR {int(k['loan_exposed']):,}",
+                  delta=f"{loan_pct}% of total loan book",
+                  delta_color="inverse",
                   help="Total loan balance held by High + Medium risk customers.",
                   label_visibility="collapsed")
 
