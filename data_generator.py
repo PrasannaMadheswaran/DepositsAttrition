@@ -78,6 +78,15 @@ def generate(n=N):
     has_cc   = rng.choice([0, 1], n, p=[0.50, 0.50])
     num_products = 1 + has_loan + has_inv + has_cc
 
+    # ── Loan outstanding (OMR) — 0 if no loan ────────────────────────────────
+    # Correlated with segment: HNI carry larger loans
+    loan_outstanding = np.where(
+        has_loan == 0, 0,
+        np.where(seg == "HNI", rng.uniform(20_000, 200_000, n),
+        np.where(seg == "SME", rng.uniform(5_000,   80_000, n),
+                               rng.uniform(1_000,   25_000, n)))
+    ).round(2)
+
     # ── Transaction activity ──────────────────────────────────────────────────
     # days_since_txn covers full range: active → inactive → churned
     # Churned customers have 366–730 days; inactive 180–365; active 1–179
@@ -209,6 +218,7 @@ def generate(n=N):
         "num_accounts"           : rng.integers(1, 5, n),
         "num_products"           : num_products,
         "has_loan"               : has_loan,
+        "loan_outstanding"       : loan_outstanding,
         "has_investment"         : has_inv,
         "has_credit_card"        : has_cc,
         "avg_monthly_credits"    : avg_monthly_credits,

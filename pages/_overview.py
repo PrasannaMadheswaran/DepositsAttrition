@@ -47,8 +47,8 @@ def load_summary():
             ROUND(SUM(CASE WHEN risk_level IN ('High','Medium') THEN balance ELSE 0 END), 0)
                                                                        AS deposits_exposed,
             ROUND(SUM(balance), 0)                                     AS total_balance,
-            ROUND(AVG(CASE WHEN risk_level = 'High' THEN balance END), 0)
-                                                                       AS avg_high_risk_bal
+            ROUND(SUM(CASE WHEN risk_level IN ('High','Medium') THEN loan_outstanding ELSE 0 END), 0)
+                                                                       AS loan_exposed
         FROM customers
         WHERE customer_status IN ('Active','Inactive')
     """)
@@ -124,8 +124,8 @@ def load_kpi_drill(metric):
                              "At-Risk Customers by Branch", "value", "Customers"),
         "deposits_exposed": ("SELECT branch, ROUND(SUM(CASE WHEN risk_level IN ('High','Medium') THEN balance ELSE 0 END),0) AS value FROM customers WHERE customer_status IN ('Active','Inactive') GROUP BY branch ORDER BY value DESC",
                              "Deposits Exposed by Branch (OMR)", "value", "OMR"),
-        "avg_high_risk_bal": ("SELECT branch, ROUND(AVG(CASE WHEN risk_level='High' THEN balance END),0) AS value FROM customers WHERE customer_status IN ('Active','Inactive') GROUP BY branch ORDER BY value DESC",
-                              "Avg Balance of High-Risk Customers by Branch (OMR)", "value", "OMR"),
+        "loan_exposed"      : ("SELECT branch, ROUND(SUM(CASE WHEN risk_level IN ('High','Medium') THEN loan_outstanding ELSE 0 END),0) AS value FROM customers WHERE customer_status IN ('Active','Inactive') GROUP BY branch ORDER BY value DESC",
+                               "Loan Outstanding (At-Risk) by Branch (OMR)", "value", "OMR"),
     }
     sql, title, val_col, label = queries[metric]
     return query(sql), title, val_col, label
@@ -291,11 +291,10 @@ def show():
                   label_visibility="collapsed")
     with c4:
         st.markdown('<span class="kpi-marker"></span>', unsafe_allow_html=True)
-        if st.button("📉 Avg Bal (High Risk)", key="b4", help="Click to drill down by branch"):
-            _clear_all(); st.session_state.drill_kpi = "avg_high_risk_bal"
-        val4 = int(k['avg_high_risk_bal']) if k['avg_high_risk_bal'] else 0
-        st.metric("Avg Bal (High Risk)", f"OMR {val4:,}",
-                  help="Average balance of High-risk customers — prioritise by this.",
+        if st.button("🏦 Loan Outstanding (At-Risk)", key="b4", help="Click to drill down by branch"):
+            _clear_all(); st.session_state.drill_kpi = "loan_exposed"
+        st.metric("Loan Outstanding (At-Risk)", f"OMR {int(k['loan_exposed']):,}",
+                  help="Total loan balance held by High + Medium risk customers.",
                   label_visibility="collapsed")
 
     st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
