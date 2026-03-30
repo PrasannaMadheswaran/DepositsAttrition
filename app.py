@@ -44,7 +44,8 @@ with tab3:
     eda.show()
 
 with tab4:
-    st.info("🔜 Action List coming soon!")
+    from pages import _action_list as action_list
+    action_list.show()
 
 with tab5:
     st.info("🔜 ML Model coming soon!")
