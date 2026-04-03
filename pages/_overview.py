@@ -112,7 +112,7 @@ def load_summary():
         WHERE customer_status IN ('Active','Inactive')
           AND risk_level = 'High'
         ORDER BY balance DESC
-        LIMIT 10
+        LIMIT 5
     """)
 
     return kpis, by_risk, by_segment, by_account, by_branch, by_signal, top10
