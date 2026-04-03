@@ -87,9 +87,9 @@ def load_exit_type_summary(weeks):
 def load_summary_kpis(weeks):
     return query(f"""
         SELECT COUNT(*) AS total_churned,
-               ROUND(SUM(balance)/1e6, 3) AS total_balance_m,
-               ROUND(AVG(balance), 0)     AS avg_balance,
-               ROUND(COUNT(*)*1.0 / {weeks}, 1) AS avg_per_week
+               ROUND(AVG(has_loan) * 100, 1)        AS pct_with_loans,
+               ROUND(AVG(risk_signal_count), 1)     AS avg_signal_count,
+               ROUND(COUNT(*)*1.0 / {weeks}, 1)     AS avg_per_week
         FROM customers
         WHERE customer_status = 'Churned'
           AND exit_week >= (53 - {weeks})
@@ -128,12 +128,12 @@ def show():
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("🚪 Total Churned",    f"{int(kpis['total_churned']):,}",
               help=f"Churned in the last {weeks} weeks")
-    k2.metric("💸 Balance Lost",     f"OMR {kpis['total_balance_m']}M",
-              help="Total deposit balance of churned customers")
+    k2.metric("🏦 % With Loans",     f"{kpis['pct_with_loans']}%",
+              help="Share of churned customers who had an active loan — credit risk indicator")
     k3.metric("📊 Avg per Week",     f"{kpis['avg_per_week']}",
               help="Average weekly churn rate")
-    k4.metric("💰 Avg Balance Lost", f"OMR {int(kpis['avg_balance']):,}",
-              help="Average balance per churned customer")
+    k4.metric("⚡ Avg Signal Count", f"{kpis['avg_signal_count']}",
+              help="Average number of risk signals churned customers had before exiting")
 
     st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
 
