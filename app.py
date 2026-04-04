@@ -22,11 +22,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "📊 Overview",
     "📉 Churn Trends",
     "🔍 Risk Analysis",
     "⚠️ Action List",
+    "🧠 Ask the Data",
     "🤖 ML Model",
     "📖 Guide",
 ])
@@ -48,8 +49,12 @@ with tab4:
     action_list.show()
 
 with tab5:
-    st.info("🔜 ML Model coming soon!")
+    from pages import _nl_query as nl_query
+    nl_query.show()
 
 with tab6:
+    st.info("🔜 ML Model coming soon!")
+
+with tab7:
     from pages import _docs as docs
     docs.show()
