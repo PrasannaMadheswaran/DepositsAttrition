@@ -42,10 +42,7 @@ def show():
 
     st.markdown("""
     <div style='background:#1565C0;border-radius:10px;padding:1.2rem 1.6rem;margin-bottom:1.2rem;'>
-        <h2 style='color:white;margin:0;'>📖 Dashboard Guide</h2>
-        <p style='color:#BBDEFB;margin:4px 0 0 0;font-size:14px;'>
-            Deposits Attrition Intelligence — Oman Banking
-        </p>
+        <h2 style='color:white;margin:0;'>📖 Deposits Attrition Intelligence</h2>
     </div>
     """, unsafe_allow_html=True)
 
@@ -221,8 +218,8 @@ def show():
         </div>
         """, unsafe_allow_html=True)
 
-    # Row 2 — Action List, Ask the Data, ML Model
-    tc4, tc5, tc6 = st.columns(3)
+    # Row 2 — Action List, Ask the Data
+    tc4, tc5 = st.columns(2)
     with tc4:
         st.markdown("""
         <div class='tab-card' style='border-top-color:#E67E22;'>
@@ -250,19 +247,6 @@ def show():
                 <li><strong>Safety:</strong> Only SELECT queries are allowed — no data can be modified</li>
                 <li>Works across all columns: customer status, risk level, signals, balances, loans, branches, and more</li>
             </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    with tc6:
-        st.markdown("""
-        <div class='tab-card' style='border-top-color:#777;'>
-            <h5>🤖 ML Model <em style='font-weight:400;font-size:12px;color:#888;'>(coming soon)</em></h5>
-            <p>A machine learning model trained on historical churn patterns.</p>
-            <ul>
-                <li>Will assign a churn <strong>probability score</strong> (0–100%) to each active customer</li>
-                <li>Combines all 7 signals with customer demographics and transaction history</li>
-                <li>Scores will be integrated into the Action List for smarter prioritisation</li>
-            </ul>
-            <p style='font-size:12px;color:#999;margin-top:8px;'>This tab is currently a placeholder. Signal-based risk levels are used in the meantime.</p>
         </div>
         """, unsafe_allow_html=True)
 
